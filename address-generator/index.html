@@ -1,0 +1,1175 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>乡音 - 听得懂乡音，记得住乡愁</title>
+<style>
+:root {
+  --bg: #1a1a2e; --bg2: #16213e; --card: #0f3460;
+  --accent: #e94560; --gold: #f0c040; --text: #eee; --text2: #aaa;
+  --green: #4ecca3; --blue: #3498db; --purple: #9b59b6; --orange: #e67e22; --cyan: #00d2ff;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Microsoft YaHei','PingFang SC',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+body::before { content:''; position:fixed; top:0;left:0;width:100%;height:100%; background:radial-gradient(ellipse at top,#16213e 0%,#1a1a2e 70%); z-index:-1; }
+
+/* 登录遮罩 */
+.login-overlay { position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.85); z-index:500; display:flex; align-items:center; justify-content:center; }
+.login-overlay.hidden { display:none; }
+.login-card { background:var(--bg2); border-radius:20px; padding:36px; max-width:520px; width:90%; border:1px solid rgba(255,255,255,0.08); max-height:90vh; overflow-y:auto; }
+.login-card h1 { font-size:28px; text-align:center; margin-bottom:4px; color:var(--gold); letter-spacing:3px; }
+.login-card h1 span { color:var(--accent); }
+.login-card .subtitle { text-align:center; color:var(--text2); font-size:13px; margin-bottom:24px; }
+.login-step { display:none; }
+.login-step.active { display:block; }
+.login-step h3 { font-size:16px; color:var(--gold); margin-bottom:12px; }
+.consent-box { background:rgba(233,68,96,0.08); border:1px solid rgba(233,68,96,0.2); border-radius:12px; padding:16px; margin-bottom:20px; font-size:13px; color:var(--text2); line-height:1.8; }
+.consent-box strong { color:var(--accent); }
+.consent-check { display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:14px; cursor:pointer; }
+.consent-check input { width:18px; height:18px; accent-color:var(--accent); }
+
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:13px; color:var(--text2); margin-bottom:6px; }
+.form-group select, .form-group input { width:100%; padding:10px 14px; background:var(--card); border:1px solid rgba(255,255,255,0.1); color:var(--text); border-radius:8px; font-size:14px; outline:none; }
+.form-group select:focus, .form-group input:focus { border-color:var(--accent); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* 顶部导航 */
+.topbar { display:flex; justify-content:space-between; align-items:center; padding:12px 20px; background:rgba(22,33,62,0.95); border-bottom:1px solid rgba(255,255,255,0.08); position:sticky; top:0; z-index:100; backdrop-filter:blur(10px); }
+.logo { font-size:20px; font-weight:bold; color:var(--gold); letter-spacing:2px; cursor:pointer; }
+.logo span { color:var(--accent); }
+.user-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.user-info { font-size:13px; color:var(--text2); }
+.user-info strong { color:var(--text); }
+.rank-badge { display:flex; align-items:center; gap:6px; padding:5px 12px; background:var(--card); border-radius:20px; font-size:12px; }
+.energy-bar { display:flex; align-items:center; gap:4px; font-size:12px; }
+.energy-bar .icon { color:var(--cyan); }
+.coin-bar { display:flex; align-items:center; gap:4px; font-size:12px; }
+.coin-bar .icon { color:var(--gold); }
+
+/* 主体布局 */
+.main-container { max-width:1280px; margin:0 auto; padding:16px; display:grid; grid-template-columns:220px 1fr 260px; gap:16px; min-height:calc(100vh - 56px); }
+@media (max-width:960px) { .main-container { grid-template-columns:1fr; } .sidebar-l,.sidebar-r { display:none; } }
+
+/* 侧栏 */
+.sidebar-l,.sidebar-r { display:flex; flex-direction:column; gap:14px; }
+.side-card { background:var(--bg2); border-radius:14px; padding:14px; border:1px solid rgba(255,255,255,0.06); }
+.side-card h3 { font-size:13px; color:var(--gold); margin-bottom:10px; letter-spacing:1px; }
+.mode-btn { display:block; width:100%; padding:11px 14px; margin-bottom:6px; background:var(--card); border:1px solid rgba(255,255,255,0.08); color:var(--text); border-radius:10px; cursor:pointer; font-size:13px; text-align:left; transition:all 0.2s; }
+.mode-btn:hover { border-color:var(--accent); background:rgba(233,68,96,0.08); }
+.mode-btn.active { border-color:var(--accent); background:rgba(233,68,96,0.18); color:#fff; }
+
+/* 排行榜 */
+.rank-item { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:12px; }
+.rank-num { width:20px; height:20px; border-radius:50%; text-align:center; line-height:20px; font-size:10px; font-weight:bold; flex-shrink:0; }
+.rank-num.gold { background:var(--gold); color:#333; }
+.rank-num.silver { background:#bdc3c7; color:#333; }
+.rank-num.bronze { background:#e67e22; color:#fff; }
+.rank-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rank-score { color:var(--gold); font-weight:bold; font-size:11px; }
+.tab-switch { display:flex; gap:4px; margin-bottom:10px; }
+.tab-btn { flex:1; padding:6px; font-size:11px; background:var(--card); border:1px solid rgba(255,255,255,0.06); color:var(--text2); border-radius:6px; cursor:pointer; text-align:center; }
+.tab-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(233,68,96,0.1); }
+
+/* 中央区域 */
+.central { display:flex; flex-direction:column; gap:14px; }
+
+/* 面板通用 */
+.panel { background:var(--bg2); border-radius:16px; padding:24px; border:1px solid rgba(255,255,255,0.06); }
+.panel h2 { font-size:20px; margin-bottom:16px; text-align:center; }
+.panel .desc { font-size:13px; color:var(--text2); text-align:center; margin-bottom:20px; }
+
+/* 单人积分 - 主菜单 */
+.home-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.home-card { background:var(--card); border-radius:14px; padding:24px 18px; cursor:pointer; text-align:center; border:2px solid transparent; transition:all 0.25s; }
+.home-card:hover { transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,0.3); border-color:var(--accent); }
+.home-card .hc-icon { font-size:44px; margin-bottom:10px; }
+.home-card .hc-title { font-size:16px; font-weight:bold; margin-bottom:6px; }
+.home-card .hc-desc { font-size:12px; color:var(--text2); line-height:1.5; }
+.home-card.read-mode { border-color:rgba(52,152,219,0.4); }
+.home-card.review-mode { border-color:rgba(78,204,163,0.4); }
+
+/* 用户家乡信息卡片 */
+.hometown-card { background:linear-gradient(135deg, rgba(240,192,64,0.1), rgba(233,68,96,0.08)); border:1px solid rgba(240,192,64,0.2); border-radius:14px; padding:16px; text-align:center; }
+.hometown-card .ht-label { font-size:12px; color:var(--text2); }
+.hometown-card .ht-addr { font-size:18px; color:var(--gold); font-weight:bold; margin:4px 0; }
+.hometown-card .ht-score { font-size:13px; color:var(--text2); }
+
+/* 语料朗读面板 */
+.corpus-item { background:var(--card); border-radius:12px; padding:16px; margin-bottom:12px; display:flex; align-items:center; gap:14px; border:1px solid rgba(255,255,255,0.06); }
+.corpus-item .ci-index { width:36px; height:36px; border-radius:50%; background:var(--accent); color:#fff; text-align:center; line-height:36px; font-weight:bold; font-size:14px; flex-shrink:0; }
+.corpus-item.done .ci-index { background:var(--green); }
+.corpus-item .ci-content { flex:1; }
+.corpus-item .ci-mandarin { font-size:15px; font-weight:bold; }
+.corpus-item .ci-hint { font-size:11px; color:var(--text2); margin-top:2px; }
+.corpus-item .ci-btn { padding:8px 16px; border-radius:20px; border:none; font-size:12px; cursor:pointer; font-weight:bold; transition:all 0.2s; }
+.ci-btn.record { background:var(--accent); color:#fff; }
+.ci-btn.record:hover { background:#c0392b; }
+.ci-btn.record.recording { background:#e74c3c; animation:pulse 1s infinite; }
+.ci-btn.done-btn { background:var(--green); color:#fff; }
+.ci-btn.replay { background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,0.15); }
+.progress-bar { width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; margin:16px 0; }
+.progress-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s; }
+
+/* 校对面板 */
+.review-item { background:var(--card); border-radius:12px; padding:16px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.06); }
+.review-item .ri-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.review-item .ri-word { font-size:18px; color:var(--gold); }
+.review-item .ri-from { font-size:11px; color:var(--text2); }
+.review-item .ri-audio { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.review-btn-sm { padding:8px 16px; border-radius:20px; border:none; font-size:12px; cursor:pointer; font-weight:bold; transition:all 0.2s; }
+.review-btn-sm.play { background:var(--accent); color:#fff; }
+.review-btn-sm.playing { background:var(--green); }
+.review-actions { display:flex; gap:8px; }
+.review-actions button { flex:1; padding:10px; border-radius:10px; border:none; cursor:pointer; font-size:13px; font-weight:bold; transition:all 0.2s; }
+.btn-correct { background:var(--green); color:#fff; }
+.btn-correct:hover { background:#3aa883; }
+.btn-wrong { background:var(--accent); color:#fff; }
+.btn-wrong:hover { background:#c0392b; }
+.btn-unsure { background:var(--orange); color:#fff; }
+.btn-unsure:hover { background:#d35400; }
+
+/* 对战面板 */
+.battle-round { text-align:center; margin-bottom:20px; }
+.battle-round .br-label { font-size:13px; color:var(--text2); }
+.battle-round .br-sentence { font-size:22px; color:var(--gold); margin:10px 0; font-weight:bold; }
+.battle-round .br-hint { font-size:12px; color:var(--text2); }
+.map-select { position:relative; }
+.map-select select { width:100%; padding:12px; background:var(--card); border:1px solid rgba(255,255,255,0.1); color:var(--text); border-radius:10px; font-size:14px; }
+.level-select { margin-bottom:10px; }
+.precision-bar { width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; margin:10px 0; overflow:hidden; }
+.precision-fill { height:100%; border-radius:4px; transition:width 0.5s; }
+
+/* 按钮 */
+.btn { padding:11px 26px; border-radius:25px; border:none; font-size:14px; cursor:pointer; font-weight:bold; transition:all 0.2s; letter-spacing:1px; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:#c0392b; transform:translateY(-1px); }
+.btn-secondary { background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,0.15); }
+.btn-gold { background:linear-gradient(135deg,var(--gold),#e67e22); color:#333; }
+.btn-sm { padding:6px 16px; font-size:12px; }
+.btn-block { width:100%; }
+
+/* 结果 */
+.result-score { font-size:56px; font-weight:bold; color:var(--gold); text-align:center; }
+.result-stars { text-align:center; font-size:36px; margin:12px 0; letter-spacing:6px; }
+
+/* Toast */
+.toast { position:fixed; top:80px; left:50%; transform:translateX(-50%); background:var(--green); color:#fff; padding:10px 24px; border-radius:25px; font-weight:bold; z-index:300; animation:slideDown 0.3s, fadeOut 0.3s 2s forwards; font-size:13px; }
+@keyframes slideDown { from { transform:translateX(-50%) translateY(-30px); opacity:0; } to { transform:translateX(-50%) translateY(0); opacity:1; } }
+@keyframes fadeOut { to { opacity:0; } }
+@keyframes pulse { 0%,100% { box-shadow:0 0 20px rgba(78,204,163,0.3); } 50% { box-shadow:0 0 40px rgba(78,204,163,0.6); } }
+
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<!-- ========== 登录界面 ========== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <h1>🏠 <span>乡</span>音</h1>
+    <p class="subtitle">方言守护者 · 用你的声音守护家乡话</p>
+
+    <!-- 步骤1：隐私授权 -->
+    <div class="login-step active" id="loginStep1">
+      <h3>📋 用户须知</h3>
+      <div class="consent-box">
+        <p><strong>录音数据用途说明：</strong></p>
+        <p>您在游戏中录制的方言语音将用于以下用途：</p>
+        <p>1. 构建中国方言语音数据库，支持AI方言识别模型训练</p>
+        <p>2. 用于游戏内"方言校对"功能，供其他用户核验</p>
+        <p>3. 经脱敏处理后的语音数据可能用于学术研究</p>
+        <p style="margin-top:8px;"><strong>隐私保护承诺：</strong></p>
+        <p>✓ 录音不涉及个人隐私信息（不会要求录制姓名、身份证号等）</p>
+        <p>✓ 仅录制指定语料内容（日常词汇、短句）</p>
+        <p>✓ 数据存储经加密处理，严格遵守《个人信息保护法》</p>
+        <p>✓ 您有权随时申请删除个人录音数据</p>
+      </div>
+      <label class="consent-check">
+        <input type="checkbox" id="consentCheck" onchange="toggleConsent()">
+        <span>我已阅读并同意以上条款，愿意为方言保护贡献力量</span>
+      </label>
+      <button class="btn btn-primary btn-block" id="consentBtn" disabled onclick="goLoginStep(2)">同意并继续 →</button>
+    </div>
+
+    <!-- 步骤2：填写个人信息 -->
+    <div class="login-step" id="loginStep2">
+      <h3>👤 个人信息（用于方言数据分析）</h3>
+      <div class="form-group">
+        <label>性别</label>
+        <select id="userGender"><option value="">请选择</option><option value="male">男</option><option value="female">女</option></select>
+      </div>
+      <div class="form-group">
+        <label>年龄段</label>
+        <select id="userAge">
+          <option value="">请选择</option>
+          <option value="under18">18岁以下</option><option value="18-25">18-25岁</option><option value="26-35">26-35岁</option>
+          <option value="36-45">36-45岁</option><option value="46-60">46-60岁</option><option value="over60">60岁以上</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>家乡地址（精确到镇，用于区域积分统计）</label>
+        <select id="userProvince" onchange="onProvinceChange()"><option value="">省/直辖市</option></select>
+        <select id="userCity" onchange="onCityChange()" style="margin-top:6px;"><option value="">市/区</option></select>
+        <select id="userCounty" onchange="onCountyChange()" style="margin-top:6px;"><option value="">县/区</option></select>
+        <select id="userTown" style="margin-top:6px;"><option value="">镇/街道</option></select>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="completeLogin()">🏠 进入乡音世界</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 顶部导航 ========== -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="logo" onclick="goHome()">🏠 <span>乡</span>音</div>
+    <span style="color:var(--gold);font-size:13px;font-style:italic;letter-spacing:1px;white-space:nowrap;">听得懂乡音，记得住乡愁</span>
+  </div>
+  <div class="user-bar">
+    <span class="user-info" id="userAddrDisplay"></span>
+    <span class="rank-badge" id="rankBadge">🥉 <span id="rankTitle">方言萌新</span></span>
+    <span class="coin-bar"><span class="icon">🪙</span><span id="coinNum">0</span></span>
+    <span class="energy-bar"><span class="icon">⚡</span><span id="energyNum">100</span></span>
+  </div>
+</div>
+
+<!-- ========== 主体 ========== -->
+<div class="main-container">
+  <!-- 左侧栏 -->
+  <aside class="sidebar-l">
+    <div class="side-card">
+      <h3>🎮 游戏模式</h3>
+      <button class="mode-btn active" data-mode="home" onclick="switchMode('home')">🏠 单人积分</button>
+      <button class="mode-btn" data-mode="battle" onclick="switchMode('battle')">⚔️ 竞技对战</button>
+      <button class="mode-btn" data-mode="school" onclick="switchMode('school')">📖 方言学堂</button>
+      <button class="mode-btn" data-mode="daily" onclick="switchMode('daily')">🏅 每日挑战</button>
+    </div>
+    <div class="side-card">
+      <h3>📊 数据贡献榜</h3>
+      <div class="tab-switch">
+        <button class="tab-btn active" id="tabPersonal" onclick="switchRankTab('personal')">个人榜</button>
+        <button class="tab-btn" id="tabCity" onclick="switchRankTab('city')">市级榜</button>
+      </div>
+      <div id="rankList"></div>
+    </div>
+  </aside>
+
+  <!-- 中央区域 -->
+  <main class="central" id="centralContent"></main>
+
+  <!-- 右侧栏 -->
+  <aside class="sidebar-r">
+    <div class="side-card">
+      <h3>🏙️ 区域贡献榜</h3>
+      <div id="regionScoreBoard"></div>
+    </div>
+    <div class="side-card">
+      <h3>📈 我的贡献</h3>
+      <div id="myContrib"></div>
+    </div>
+  </aside>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+// ==================== 行政区划数据（从外部JSON动态加载） ====================
+let addressData = {};
+let addressDataLoaded = false;
+
+// 从外部JSON文件加载完整行政区划数据
+fetch('address_full.json?v=20260530')
+  .then(res => res.json())
+  .then(data => {
+    addressData = data;
+    addressDataLoaded = true;
+    // 数据加载完成后初始化页面
+    initLogin();
+    populateBattleProvince();
+  })
+  .catch(err => {
+    console.error('加载行政区划数据失败:', err);
+    // 降级：使用空数据继续
+    initLogin();
+  });
+// 语料库
+const corpusData = [
+  { mandarin:'吃饭', hint:'日常用语' },
+  { mandarin:'你好', hint:'问候语' },
+  { mandarin:'谢谢', hint:'礼貌用语' },
+  { mandarin:'睡觉', hint:'日常用语' },
+  { mandarin:'去哪里', hint:'日常问句' },
+  { mandarin:'今天天气真好', hint:'日常短句' },
+  { mandarin:'欢迎来我家', hint:'待客用语' },
+  { mandarin:'新年快乐', hint:'节日祝福' },
+  { mandarin:'多少钱', hint:'购物用语' },
+  { mandarin:'好久不见', hint:'寒暄用语' },
+];
+
+// 对战题库（含区域精度层级）
+const battleQuestions = [
+  { sentence:'食饭', province:'广东省', city:'广州市', county:'天河区', meaning:'吃饭' },
+  { sentence:'巴适', province:'四川省', city:'成都市', county:'武侯区', meaning:'舒服' },
+  { sentence:'侬好', province:'上海市', city:'上海市', county:'黄浦区', meaning:'你好' },
+  { sentence:'呷饱未', province:'福建省', city:'厦门市', county:'思明区', meaning:'吃了吗' },
+  { sentence:'食朝', province:'广东省', city:'梅州市', county:'梅江区', meaning:'吃早饭' },
+  { sentence:'恰饭', province:'湖南省', city:'长沙市', county:'岳麓区', meaning:'吃饭' },
+  { sentence:'干啥呢', province:'黑龙江省', city:'哈尔滨市', county:'南岗区', meaning:'做什么呢' },
+  { sentence:'要得', province:'四川省', city:'绵阳市', county:'涪城区', meaning:'好的' },
+  { sentence:'摆龙门阵', province:'四川省', city:'成都市', county:'锦江区', meaning:'聊天' },
+  { sentence:'贼好', province:'辽宁省', city:'沈阳市', county:'和平区', meaning:'非常好' },
+  { sentence:'做乜嘢', province:'广东省', city:'广州市', county:'越秀区', meaning:'做什么' },
+  { sentence:'谢谢侬', province:'上海市', city:'上海市', county:'静安区', meaning:'谢谢你' },
+  { sentence:'唔该', province:'广东省', city:'广州市', county:'天河区', meaning:'谢谢' },
+  { sentence:'饮茶', province:'广东省', city:'深圳市', county:'南山区', meaning:'喝茶' },
+  { sentence:'好犀利', province:'广东省', city:'潮州市', county:'湘桥区', meaning:'好厉害' },
+  { sentence:'您吃了吗', province:'北京市', city:'北京市', county:'东城区', meaning:'您吃饭了吗' },
+  { sentence:'倍儿好', province:'天津市', city:'天津市', county:'和平区', meaning:'非常好' },
+  { sentence:'俺们那嘎达', province:'辽宁省', city:'沈阳市', county:'沈河区', meaning:'我们那边' },
+  { sentence:'中不中', province:'河南省', city:'郑州市', county:'二七区', meaning:'行不行' },
+  { sentence:'克哪点', province:'云南省', city:'昆明市', county:'五华区', meaning:'去哪里' },
+  { sentence:'搞么斯', province:'湖北省', city:'武汉市', county:'武昌区', meaning:'干什么' },
+  { sentence:'黑嘛', province:'山东省', city:'济南市', county:'历下区', meaning:'很暗/很黑' },
+  { sentence:'啥子嘛', province:'重庆市', city:'重庆市', county:'渝中区', meaning:'什么嘛' },
+  { sentence:'喇个', province:'江苏省', city:'南京市', county:'玄武区', meaning:'哪个' },
+  { sentence:'俺不哩', province:'河南省', city:'开封市', county:'龙亭区', meaning:'我不知道' },
+  { sentence:'寻啥西', province:'浙江省', city:'杭州市', county:'西湖区', meaning:'找什么' },
+  { sentence:'做咩', province:'广西壮族自治区', city:'南宁市', county:'青秀区', meaning:'做什么' },
+  { sentence:'咋整', province:'吉林省', city:'长春市', county:'朝阳区', meaning:'怎么办' },
+  { sentence:'拉呱', province:'山东省', city:'临沂市', county:'兰山区', meaning:'聊天' },
+  { sentence:'且过了', province:'河北省', city:'石家庄市', county:'长安区', meaning:'去过了' },
+  { sentence:'照不照', province:'安徽省', city:'合肥市', county:'庐阳区', meaning:'行不行' },
+  { sentence:'做呢', province:'云南省', city:'大理白族自治州', county:'大理市', meaning:'干什么' },
+  { sentence:'将才', province:'陕西省', city:'西安市', county:'雁塔区', meaning:'刚才' },
+  { sentence:'困觉', province:'江西省', city:'南昌市', county:'东湖区', meaning:'睡觉' },
+  { sentence:'切饭', province:'江苏省', city:'苏州市', county:'姑苏区', meaning:'吃饭' },
+  { sentence:'整哪样', province:'贵州省', city:'贵阳市', county:'南明区', meaning:'做什么' },
+  { sentence:'阿么', province:'甘肃省', city:'兰州市', county:'城关区', meaning:'那么' },
+  { sentence:'浪起', province:'宁夏回族自治区', city:'银川市', county:'兴庆区', meaning:'玩耍' },
+  { sentence:'么子', province:'湖北省', city:'宜昌市', county:'西陵区', meaning:'什么' },
+  { sentence:'今儿个', province:'河北省', city:'唐山市', county:'路北区', meaning:'今天' },
+  { sentence:'阿吃过啦', province:'江苏省', city:'南京市', county:'秦淮区', meaning:'吃过了吗' },
+  { sentence:'木有', province:'山东省', city:'青岛市', county:'市南区', meaning:'没有' },
+  { sentence:'晓得不', province:'四川省', city:'德阳市', county:'旌阳区', meaning:'知道吗' },
+  { sentence:'搞快点', province:'重庆市', city:'重庆市', county:'江北区', meaning:'快一点' },
+  { sentence:'猫着', province:'辽宁省', city:'大连市', county:'中山区', meaning:'躲着' },
+  { sentence:'嬲塞', province:'湖南省', city:'株洲市', county:'天元区', meaning:'厉害' },
+  { sentence:'做啥', province:'浙江省', city:'宁波市', county:'海曙区', meaning:'做什么' },
+  { sentence:'佢去边', province:'广西壮族自治区', city:'桂林市', county:'秀峰区', meaning:'他去哪' },
+  { sentence:'咋啦', province:'陕西省', city:'咸阳市', county:'秦都区', meaning:'怎么了' },
+  { sentence:'嘎哈去', province:'吉林省', city:'吉林市', county:'船营区', meaning:'干什么去' },
+];
+
+// ==================== 用户状态 ====================
+const state = {
+  loggedIn: false,
+  user: { gender:'', age:'', province:'', city:'', county:'', town:'', fullAddr:'' },
+  mode: 'home',
+  screen: 'home',
+  // 积分与等级
+  level:1, xp:0, coins:0, energy:100, maxEnergy:100, rank:'方言萌新',
+  // 单人积分 - 朗读
+  corpusProgress: {},   // { corpusIndex: 'done' }
+  corpusRecordings: {},  // { corpusIndex: 'audioUrl' }
+  // 单人积分 - 校对
+  reviewQueue: [],
+  reviewDone: 0,
+  reviewCorrect: 0,
+  // 对战
+  battleLevel: 3,       // 3/5/10
+  battleRound: 0,
+  battleScore: 0,
+  battleCorrect: 0,
+  battleTotalRounds: 3,
+  battleQuestions: [],
+  // 区域贡献值
+  regionScores: {},     // { '广东省/广州市/天河区': score }
+  personalContrib: 0,
+  // 排行榜
+  personalRank: [
+    { name:'方言守护者·阿明', addr:'广东省/广州市/天河区', score:3280 },
+    { name:'粤语传承人·小琳', addr:'广东省/广州市/越秀区', score:2890 },
+    { name:'四川话大使·老王', addr:'四川省/成都市/武侯区', score:2450 },
+    { name:'闽南通·阿杰', addr:'福建省/厦门市/思明区', score:1980 },
+    { name:'吴语达人·小美', addr:'上海市/上海市/黄浦区', score:1560 },
+  ],
+  cityRank: [
+    { city:'广东省广州市', score:12850 },
+    { city:'四川省成都市', score:10240 },
+    { city:'福建省厦门市', score:8920 },
+    { city:'上海市', score:7560 },
+    { city:'湖南省长沙市', score:6320 },
+    { city:'浙江省杭州市', score:5890 },
+    { city:'重庆市', score:5210 },
+    { city:'湖北省武汉市', score:4680 },
+    { city:'北京市', score:4350 },
+    { city:'陕西省西安市', score:3980 },
+  ],
+  rankTab: 'personal',
+  // 每日挑战
+  dailyDate: '',         // 记录日期，跨天重置
+  dailyTasks: [],        // 今日任务
+  dailyDone: {},         // 已完成任务 { taskId: true }
+  dailyClaimed: {},      // 已领取奖励 { taskId: true }
+};
+
+// ==================== 登录逻辑 ====================
+function initLogin() {
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  populateProvince();
+}
+
+function populateProvince() {
+  const sel = document.getElementById('userProvince');
+  sel.innerHTML = '<option value="">省/直辖市</option>';
+  Object.keys(addressData).forEach(p => {
+    sel.innerHTML += `<option value="${p}">${p}</option>`;
+  });
+}
+
+function onProvinceChange() {
+  const province = document.getElementById('userProvince').value;
+  const citySel = document.getElementById('userCity');
+  const countySel = document.getElementById('userCounty');
+  const townSel = document.getElementById('userTown');
+  citySel.innerHTML = '<option value="">市/区</option>';
+  countySel.innerHTML = '<option value="">县/区</option>';
+  townSel.innerHTML = '<option value="">镇/街道</option>';
+  if (province && addressData[province]) {
+    Object.keys(addressData[province]).forEach(c => {
+      citySel.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+  }
+}
+
+function onCityChange() {
+  const province = document.getElementById('userProvince').value;
+  const city = document.getElementById('userCity').value;
+  const countySel = document.getElementById('userCounty');
+  const townSel = document.getElementById('userTown');
+  countySel.innerHTML = '<option value="">县/区</option>';
+  townSel.innerHTML = '<option value="">镇/街道</option>';
+  if (province && city && addressData[province] && addressData[province][city]) {
+    Object.keys(addressData[province][city]).forEach(co => {
+      countySel.innerHTML += `<option value="${co}">${co}</option>`;
+    });
+  }
+}
+
+function onCountyChange() {
+  const province = document.getElementById('userProvince').value;
+  const city = document.getElementById('userCity').value;
+  const county = document.getElementById('userCounty').value;
+  const townSel = document.getElementById('userTown');
+  townSel.innerHTML = '<option value="">镇/街道</option>';
+  if (province && city && county && addressData[province] && addressData[province][city] && addressData[province][city][county]) {
+    addressData[province][city][county].forEach(t => {
+      townSel.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+  }
+}
+
+function toggleConsent() {
+  document.getElementById('consentBtn').disabled = !document.getElementById('consentCheck').checked;
+}
+
+function goLoginStep(step) {
+  document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('loginStep' + step).classList.add('active');
+}
+
+function completeLogin() {
+  const gender = document.getElementById('userGender').value;
+  const age = document.getElementById('userAge').value;
+  const province = document.getElementById('userProvince').value;
+  const city = document.getElementById('userCity').value;
+  const county = document.getElementById('userCounty').value;
+  const town = document.getElementById('userTown').value;
+
+  if (!gender || !age || !province || !city || !county || !town) {
+    showToast('⚠️ 请填写完整信息，家乡地址需精确到镇');
+    return;
+  }
+
+  state.user = { gender, age, province, city, county, town, fullAddr: `${province} ${city} ${county} ${town}` };
+  state.loggedIn = true;
+  state.regionScores[`${province}/${city}/${county}`] = (state.regionScores[`${province}/${city}/${county}`] || 0) + 0;
+
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('userAddrDisplay').innerHTML = `📍 <strong>${province} ${city}</strong> ${county} ${town}`;
+  updateTopBar();
+  renderAll();
+}
+
+// ==================== 导航与模式切换 ====================
+function switchMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-mode="${mode}"]`)?.classList.add('active');
+  if (mode === 'home') { state.screen = 'home'; renderHome(); }
+  else if (mode === 'battle') { renderBattleHome(); }
+  else if (mode === 'school') { renderSchool(); }
+  else if (mode === 'daily') { renderDaily(); }
+}
+
+function goHome() { switchMode('home'); }
+
+// ==================== 渲染入口 ====================
+function renderAll() {
+  renderHome();
+  renderRankList();
+  renderRegionScore();
+  renderMyContrib();
+  updateTopBar();
+}
+
+// ==================== 单人积分 - 主页 ====================
+function renderHome() {
+  state.screen = 'home';
+  const c = document.getElementById('centralContent');
+  const doneCount = Object.keys(state.corpusProgress).length;
+  const reviewCount = state.reviewDone;
+  const regionKey = `${state.user.province}/${state.user.city}/${state.user.county}`;
+  const regionScore = state.regionScores[regionKey] || 0;
+
+  c.innerHTML = `
+    <div class="hometown-card">
+      <div class="ht-label">🏠 我的家乡</div>
+      <div class="ht-addr">${state.user.fullAddr}</div>
+      <div class="ht-score">本区域贡献值：<b style="color:var(--gold);">${regionScore}</b> 分</div>
+    </div>
+    <div class="panel" style="text-align:center;">
+      <h2>🎯 单人积分模式</h2>
+      <p class="desc">通过朗读和校对为家乡方言贡献力量，你的每一次参与都会计入区域总分</p>
+      <div class="home-grid">
+        <div class="home-card read-mode" onclick="renderCorpusRead()">
+          <div class="hc-icon">🎙️</div>
+          <div class="hc-title">语料朗读</div>
+          <div class="hc-desc">对照语料用家乡话朗读<br>完成进度：${doneCount}/${corpusData.length}<br>每次朗读 +10积分</div>
+        </div>
+        <div class="home-card review-mode" onclick="renderCorpusReview()">
+          <div class="hc-icon">✅</div>
+          <div class="hc-title">方言校对</div>
+          <div class="hc-desc">核验他人说的本地话是否正确<br>已校对：${reviewCount} 条<br>每次校对 +5积分</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="text-align:center;">
+      <h3 style="font-size:16px;color:var(--text2);">💡 积分规则</h3>
+      <p style="font-size:12px;color:var(--text2);line-height:1.8;">
+        朗读语料：+10积分/条 → 计入 <b style="color:var(--gold);">${state.user.province}→${state.user.city}→${state.user.county}→${state.user.town}</b><br>
+        校对审核：+5积分/条 → 同时计入个人贡献值 & 市级贡献榜
+      </p>
+    </div>
+  `;
+}
+
+// ==================== 语料朗读 ====================
+function renderCorpusRead() {
+  state.screen = 'corpus';
+  const c = document.getElementById('centralContent');
+  const doneCount = Object.keys(state.corpusProgress).length;
+  c.innerHTML = `
+    <div class="panel">
+      <h2>🎙️ 语料朗读</h2>
+      <p class="desc">请用你的家乡话（${state.user.province}${state.user.city}${state.user.county}口音）朗读以下语料</p>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(doneCount/corpusData.length)*100}%"></div></div>
+      <p style="text-align:center;font-size:12px;color:var(--text2);">${doneCount}/${corpusData.length} 条已完成</p>
+      <div id="corpusList">
+        ${corpusData.map((item, i) => {
+          const isDone = state.corpusProgress[i];
+          return `
+            <div class="corpus-item ${isDone ? 'done' : ''}">
+              <div class="ci-index">${i + 1}</div>
+              <div class="ci-content">
+                <div class="ci-mandarin">${item.mandarin}</div>
+                <div class="ci-hint">${item.hint}</div>
+              </div>
+              <button class="ci-btn ${isDone ? 'done-btn' : 'record'}" id="recBtn${i}"
+                onclick="${isDone ? `replayRecording(${i})` : `toggleCorpusRecord(${i})`}">
+                ${isDone ? '🔊 回放' : '🎤 朗读'}
+              </button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <button class="btn btn-secondary" onclick="renderHome()" style="margin-top:16px;">← 返回</button>
+    </div>
+  `;
+}
+
+function toggleCorpusRecord(idx) {
+  const btn = document.getElementById('recBtn' + idx);
+  if (!btn) return;
+  if (btn.classList.contains('recording')) {
+    // 停止录音 → 完成
+    btn.classList.remove('recording');
+    btn.textContent = '🔊 回放';
+    btn.className = 'ci-btn done-btn';
+    state.corpusProgress[idx] = true;
+    state.corpusRecordings[idx] = 'mock_audio_' + idx;
+    state.coins += 10;
+    state.personalContrib += 10;
+    // 计入区域积分
+    const regionKey = `${state.user.province}/${state.user.city}/${state.user.county}`;
+    state.regionScores[regionKey] = (state.regionScores[regionKey] || 0) + 10;
+    // 计入城市榜
+    const cityKey = `${state.user.province}${state.user.city}`;
+    const cityEntry = state.cityRank.find(c => c.city === cityKey);
+    if (cityEntry) cityEntry.score += 10;
+    else state.cityRank.push({ city: cityKey, score: 10 });
+    state.cityRank.sort((a,b) => b.score - a.score);
+    showToast('✅ 朗读完成！+10积分，已计入区域贡献');
+    updateTopBar();
+    renderRegionScore();
+    renderMyContrib();
+    renderRankList();
+    // 刷新进度条
+    const doneCount = Object.keys(state.corpusProgress).length;
+    const fill = document.querySelector('.progress-fill');
+    if (fill) fill.style.width = `${(doneCount/corpusData.length)*100}%`;
+    const cntLabel = document.querySelector('.progress-bar + p');
+    if (cntLabel) cntLabel.textContent = `${doneCount}/${corpusData.length} 条已完成`;
+    btn.onclick = () => replayRecording(idx);
+  } else {
+    btn.classList.add('recording');
+    btn.textContent = '⏺ 录音中...';
+    setTimeout(() => {
+      if (btn.classList.contains('recording')) toggleCorpusRecord(idx);
+    }, 4000);
+  }
+}
+
+function replayRecording(idx) {
+  showToast('🔊 正在回放录音（模拟）');
+}
+
+// ==================== 方言校对 ====================
+function renderCorpusReview() {
+  state.screen = 'review';
+  const c = document.getElementById('centralContent');
+  // 模拟校对队列（从其他用户上传的录音中筛选属于当前用户方言区的）
+  const reviewItems = [
+    { id:1, mandarin:'吃饭', dialect:'食饭', from:'广东省/广州市/天河区', submitter:'阿明' },
+    { id:2, mandarin:'你好', dialect:'雷猴', from:'广东省/广州市/越秀区', submitter:'小琳' },
+    { id:3, mandarin:'谢谢', dialect:'唔该', from:'广东省/广州市/天河区', submitter:'方言迷·阿杰' },
+    { id:4, mandarin:'睡觉', dialect:'瞓觉', from:'广东省/广州市/番禺区', submitter:'粤语传承人' },
+    { id:5, mandarin:'去哪里', dialect:'去边度', from:'广东省/广州市/天河区', submitter:'乡音爱好者' },
+  ];
+
+  c.innerHTML = `
+    <div class="panel">
+      <h2>✅ 方言校对</h2>
+      <p class="desc">请听录音，判断其他用户用家乡话朗读的内容是否正确</p>
+      <div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--text2);">
+        已校对：${state.reviewDone} 条 | 正确率：${state.reviewDone > 0 ? Math.round(state.reviewCorrect/state.reviewDone*100) : 0}%
+      </div>
+      <div id="reviewList">
+        ${reviewItems.map(item => `
+          <div class="review-item" id="reviewItem${item.id}">
+            <div class="ri-header">
+              <div class="ri-word">📖 语料："${item.mandarin}"</div>
+              <div class="ri-from">来自：${item.from} · ${item.submitter}</div>
+            </div>
+            <div class="ri-audio">
+              <button class="review-btn-sm play" onclick="playReviewAudio(${item.id})">▶ 播放方言录音</button>
+              <span style="font-size:12px;color:var(--text2);">请听发音是否正确</span>
+            </div>
+            <div class="review-actions" id="reviewActions${item.id}">
+              <button class="btn-correct" onclick="doReview(${item.id}, 'correct')">✅ 正确</button>
+              <button class="btn-wrong" onclick="doReview(${item.id}, 'wrong')">❌ 不正确</button>
+              <button class="btn-unsure" onclick="doReview(${item.id}, 'unsure')">🤔 不确定</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn btn-secondary" onclick="renderHome()" style="margin-top:16px;">← 返回</button>
+    </div>
+  `;
+}
+
+function playReviewAudio(id) {
+  showToast('🔊 正在播放方言录音（模拟）');
+}
+
+function doReview(id, verdict) {
+  const actions = document.getElementById('reviewActions' + id);
+  if (!actions) return;
+  actions.innerHTML = '<span style="color:var(--green);">✅ 已提交审核</span>';
+  state.reviewDone++;
+  if (verdict === 'correct') state.reviewCorrect++;
+  state.coins += 5;
+  state.personalContrib += 5;
+  const regionKey = `${state.user.province}/${state.user.city}/${state.user.county}`;
+  state.regionScores[regionKey] = (state.regionScores[regionKey] || 0) + 5;
+  showToast('✅ 校对完成！+5积分');
+  updateTopBar();
+  renderRegionScore();
+  renderMyContrib();
+}
+
+// ==================== 竞技对战 ====================
+function renderBattleHome() {
+  state.screen = 'battle_home';
+  const c = document.getElementById('centralContent');
+  c.innerHTML = `
+    <div class="panel" style="text-align:center;">
+      <h2>⚔️ 猜方言大赛</h2>
+      <p class="desc">听方言句子，猜它是哪个地区的方言。猜的区域精度越高，得分越高！</p>
+      <div style="margin-bottom:20px;">
+        <p style="font-size:14px;color:var(--text2);margin-bottom:10px;">选择难度：</p>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button class="btn ${state.battleLevel===3?'btn-primary':'btn-secondary'}" onclick="startBattle(3)">🌱 简单 (3句)</button>
+          <button class="btn ${state.battleLevel===5?'btn-primary':'btn-secondary'}" onclick="startBattle(5)">🌿 中等 (5句)</button>
+          <button class="btn ${state.battleLevel===10?'btn-primary':'btn-secondary'}" onclick="startBattle(10)">🌳 困难 (10句)</button>
+        </div>
+      </div>
+      <div style="background:var(--card);border-radius:12px;padding:16px;text-align:left;font-size:13px;color:var(--text2);line-height:1.8;">
+        <p><b style="color:var(--gold);">计分规则（精度越高分数越高）：</b></p>
+        <p>🎯 精确到<b>镇/街道</b> → 100分</p>
+        <p>🎯 精确到<b>县/区</b> → 70分</p>
+        <p>🎯 精确到<b>市</b> → 40分</p>
+        <p>🎯 精确到<b>省</b> → 15分</p>
+        <p>❌ 完全错误 → 0分</p>
+      </div>
+    </div>
+  `;
+}
+
+function startBattle(rounds) {
+  state.battleLevel = rounds;
+  state.battleRound = 0;
+  state.battleScore = 0;
+  state.battleCorrect = 0;
+  state.battleTotalRounds = rounds;
+  state.battleQuestions = shuffleArray([...battleQuestions]).slice(0, rounds);
+  state.screen = 'battle';
+  renderBattleQuestion();
+}
+
+function renderBattleQuestion() {
+  if (state.battleRound >= state.battleTotalRounds) { endBattle(); return; }
+  const q = state.battleQuestions[state.battleRound];
+  const c = document.getElementById('centralContent');
+  c.innerHTML = `
+    <div class="panel" style="text-align:center;">
+      <div class="battle-round">
+        <div class="br-label">第 ${state.battleRound+1}/${state.battleTotalRounds} 句</div>
+        <div class="br-sentence" id="battleSentence">"${q.sentence}"</div>
+        <div class="br-hint">（含义：${q.meaning}）点击下方播放按钮听方言语音</div>
+        <button class="btn btn-primary" style="margin:12px 0;" onclick="playBattleAudio()">▶ 播放方言语音</button>
+      </div>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:12px;">请选择这句话来自哪个地区：</p>
+      <div class="map-select" style="margin-bottom:10px;">
+        <select id="battleProvince" onchange="battleProvinceChange()">
+          <option value="">选择省份</option>
+          ${Object.keys(addressData).map(p => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="map-select" style="margin-bottom:10px;">
+        <select id="battleCity" onchange="battleCityChange()"><option value="">选择城市</option></select>
+      </div>
+      <div class="map-select" style="margin-bottom:10px;">
+        <select id="battleCounty" onchange="battleCountyChange()"><option value="">选择县/区</option></select>
+      </div>
+      <div class="map-select" style="margin-bottom:16px;">
+        <select id="battleTown"><option value="">选择镇/街道（选填，提高精度得分）</option></select>
+      </div>
+      <button class="btn btn-gold btn-block" onclick="submitBattleAnswer()">🎯 提交答案</button>
+    </div>
+  `;
+}
+
+function battleProvinceChange() {
+  const province = document.getElementById('battleProvince').value;
+  const citySel = document.getElementById('battleCity');
+  citySel.innerHTML = '<option value="">选择城市</option>';
+  document.getElementById('battleCounty').innerHTML = '<option value="">选择县/区</option>';
+  document.getElementById('battleTown').innerHTML = '<option value="">选择镇/街道（选填）</option>';
+  if (province && addressData[province]) {
+    Object.keys(addressData[province]).forEach(c => {
+      citySel.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+  }
+}
+
+function battleCityChange() {
+  const province = document.getElementById('battleProvince').value;
+  const city = document.getElementById('battleCity').value;
+  const countySel = document.getElementById('battleCounty');
+  countySel.innerHTML = '<option value="">选择县/区</option>';
+  document.getElementById('battleTown').innerHTML = '<option value="">选择镇/街道（选填）</option>';
+  if (province && city && addressData[province] && addressData[province][city]) {
+    Object.keys(addressData[province][city]).forEach(co => {
+      countySel.innerHTML += `<option value="${co}">${co}</option>`;
+    });
+  }
+}
+
+function battleCountyChange() {
+  const province = document.getElementById('battleProvince').value;
+  const city = document.getElementById('battleCity').value;
+  const county = document.getElementById('battleCounty').value;
+  const townSel = document.getElementById('battleTown');
+  townSel.innerHTML = '<option value="">选择镇/街道（选填，提高精度得分）</option>';
+  if (province && city && county && addressData[province] && addressData[province][city] && addressData[province][city][county]) {
+    addressData[province][city][county].forEach(t => {
+      townSel.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+  }
+}
+
+function playBattleAudio() { showToast('🔊 正在播放方言语音（模拟）'); }
+
+function submitBattleAnswer() {
+  const q = state.battleQuestions[state.battleRound];
+  const ansProvince = document.getElementById('battleProvince').value;
+  const ansCity = document.getElementById('battleCity').value;
+  const ansCounty = document.getElementById('battleCounty').value;
+  const ansTown = document.getElementById('battleTown').value;
+
+  if (!ansProvince) { showToast('⚠️ 请至少选择省份'); return; }
+
+  let score = 0;
+  let detail = '';
+  if (ansTown && ansTown === q.county.split('/').pop()) {
+    // 精确到镇（这里简化：county字段存的是"县/区"名，town实际没有精确匹配，用county近似）
+    score = 100; detail = '🎯 精确到镇！';
+  } else if (ansCounty && ansCounty === q.county) {
+    score = 70; detail = '📍 精确到县/区';
+  } else if (ansCity && ansCity === q.city) {
+    score = 40; detail = '🏙️ 精确到市';
+  } else if (ansProvince === q.province) {
+    score = 15; detail = '🗺️ 精确到省';
+  } else {
+    score = 0; detail = '❌ 回答错误';
+  }
+
+  state.battleScore += score;
+  if (score > 0) state.battleCorrect++;
+
+  const c = document.getElementById('centralContent');
+  c.innerHTML = `
+    <div class="panel" style="text-align:center;">
+      <h2>${score >= 40 ? '🎉' : '💪'} ${detail}</h2>
+      <div class="result-score">+${score}</div>
+      <p style="color:var(--text2);margin:12px 0;">正确答案：<b style="color:var(--gold);">${q.province} ${q.city} ${q.county}</b></p>
+      <p style="font-size:13px;color:var(--text2);">当前总分：${state.battleScore} | 正确 ${state.battleCorrect}/${state.battleRound+1}</p>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="nextBattleQuestion()">下一题 →</button>
+    </div>
+  `;
+}
+
+function nextBattleQuestion() {
+  state.battleRound++;
+  if (state.battleRound >= state.battleTotalRounds) { endBattle(); }
+  else { renderBattleQuestion(); }
+}
+
+function endBattle() {
+  const percent = Math.round((state.battleCorrect / state.battleTotalRounds) * 100);
+  const c = document.getElementById('centralContent');
+  c.innerHTML = `
+    <div class="panel" style="text-align:center;">
+      <h2>${percent >= 60 ? '🏆 比赛结束！' : '💪 比赛结束'}</h2>
+      <div class="result-score">${state.battleScore}</div>
+      <p style="color:var(--text2);">正确 ${state.battleCorrect}/${state.battleTotalRounds} 句 (${percent}%)</p>
+      <p style="color:var(--green);">✨ 获得经验 +${state.battleScore} | 🪙 金币 +${Math.floor(state.battleScore/5)}</p>
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="startBattle(state.battleLevel)">🔄 再来一局</button>
+        <button class="btn btn-secondary" onclick="switchMode('home')">🏠 返回主页</button>
+      </div>
+    </div>
+  `;
+  state.xp += state.battleScore;
+  state.coins += Math.floor(state.battleScore / 5);
+  checkLevelUp();
+  updateTopBar();
+}
+
+// ==================== 排行榜 ====================
+function switchRankTab(tab) {
+  state.rankTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab === 'personal' ? 'tabPersonal' : 'tabCity').classList.add('active');
+  renderRankList();
+}
+
+function renderRankList() {
+  const container = document.getElementById('rankList');
+  if (!container) return;
+  const data = state.rankTab === 'personal' ? state.personalRank : state.cityRank;
+  container.innerHTML = data.slice(0, 10).map((item, i) => {
+    let cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const name = item.name || item.city;
+    const score = item.score;
+    return `
+      <div class="rank-item">
+        <div class="rank-num ${cls}">${i + 1}</div>
+        <div class="rank-name">${name}</div>
+        <div class="rank-score">${score.toLocaleString()}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==================== 区域贡献榜 ====================
+function renderRegionScore() {
+  const container = document.getElementById('regionScoreBoard');
+  if (!container) return;
+  const myKey = `${state.user.province}/${state.user.city}/${state.user.county}`;
+  const myScore = state.regionScores[myKey] || 0;
+  // 按行政区划层级展示
+  const provKey = state.user.province;
+  const cityKey = `${state.user.province}/${state.user.city}`;
+  const provScore = Object.entries(state.regionScores)
+    .filter(([k]) => k.startsWith(provKey))
+    .reduce((sum, [,s]) => sum + s, 0);
+  const cityScore = Object.entries(state.regionScores)
+    .filter(([k]) => k.startsWith(cityKey))
+    .reduce((sum, [,s]) => sum + s, 0);
+
+  container.innerHTML = `
+    <div style="font-size:12px;line-height:2;">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <span>🗺️ ${provKey}</span><span style="color:var(--gold);">${provScore}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <span>🏙️ ${state.user.city}</span><span style="color:var(--gold);">${cityScore}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+        <span>📍 ${state.user.county}</span><span style="color:var(--gold);">${myScore}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;">
+        <span>🏘️ ${state.user.town}</span><span style="color:var(--gold);">${myScore}</span>
+      </div>
+    </div>
+    <p style="font-size:10px;color:var(--text2);margin-top:8px;">积分按行政区域从省→市→县→镇逐级累积</p>
+  `;
+}
+
+// ==================== 我的贡献 ====================
+function renderMyContrib() {
+  const container = document.getElementById('myContrib');
+  if (!container) return;
+  const doneCount = Object.keys(state.corpusProgress).length;
+  container.innerHTML = `
+    <div style="font-size:12px;line-height:2;">
+      <div>🎙️ 朗读语料：<b style="color:var(--gold);">${doneCount}</b> 条</div>
+      <div>✅ 校对审核：<b style="color:var(--gold);">${state.reviewDone}</b> 条</div>
+      <div>📊 个人贡献值：<b style="color:var(--gold);">${state.personalContrib}</b></div>
+      <div>🪙 当前金币：<b style="color:var(--gold);">${state.coins}</b></div>
+      <div>⭐ 等级：<b style="color:var(--gold);">Lv.${state.level}</b> ${state.rank}</div>
+    </div>
+  `;
+}
+
+// ==================== 等级系统 ====================
+function checkLevelUp() {
+  const ranks = [
+    { level:1, title:'方言萌新', xp:0 },
+    { level:10, title:'乡音学徒', xp:500 },
+    { level:20, title:'本地话使者', xp:1500 },
+    { level:30, title:'方言行家', xp:4000 },
+    { level:50, title:'母语守护者', xp:10000 },
+    { level:80, title:'方言宗师', xp:30000 },
+  ];
+  let newRank = ranks[0];
+  for (const r of ranks) { if (state.xp >= r.xp) newRank = r; }
+  if (newRank.level > state.level || newRank.title !== state.rank) {
+    state.level = newRank.level;
+    state.rank = newRank.title;
+    showToast(`🎉 升级！${state.rank} Lv.${state.level}`);
+  }
+}
+
+// ==================== 顶部栏 ====================
+function updateTopBar() {
+  document.getElementById('rankTitle').textContent = state.rank;
+  document.getElementById('energyNum').textContent = state.energy;
+  document.getElementById('coinNum').textContent = state.coins;
+}
+
+// ==================== 工具函数 ====================
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function showToast(msg) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+// 能量恢复
+setInterval(() => {
+  if (state.energy < state.maxEnergy) {
+    state.energy = Math.min(state.maxEnergy, state.energy + 1);
+    updateTopBar();
+  }
+}, 6000);
+
+// ==================== 方言学堂 ====================
+function renderSchool() {
+  state.screen = 'school';
+  const c = document.getElementById('centralContent');
+  // 从语料库随机选几条作为学习内容
+  const sample = shuffleArray([...corpusData]).slice(0, 6);
+  c.innerHTML = `
+    <div class="panel" style="text-align:center;">
+      <h2>📖 方言学堂</h2>
+      <p class="desc">了解全国各地的方言词汇，感受语言文化的魅力</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      ${sample.map((item, i) => `
+        <div class="home-card" style="border-color:rgba(155,89,182,0.3);cursor:default;" onclick="learnDialectDetail('${item.mandarin}','${item.hint}')">
+          <div class="hc-icon">🗣️</div>
+          <div class="hc-title">${item.mandarin}</div>
+          <div class="hc-desc">类别：${item.hint}<br>点击查看各地方言说法</div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn btn-secondary" onclick="renderSchool()">🔄 换一批</button>
+    </div>
+  `;
+}
+
+function learnDialectDetail(word, hint) {
+  const c = document.getElementById('centralContent');
+  // 模拟各地方言说法
+  const dialectMap = {
+    '吃饭': [{ region:'广东', say:'食饭' },{ region:'四川', say:'干饭' },{ region:'上海', say:'切饭' },{ region:'湖南', say:'呷饭' },{ region:'福建', say:'呷崩' },{ region:'河南', say:'喝汤' }],
+    '你好': [{ region:'广东', say:'雷猴' },{ region:'四川', say:'你吼' },{ region:'上海', say:'侬好' },{ region:'湖南', say:'你咯好' },{ region:'陕西', say:'你揍撒' }],
+    '谢谢': [{ region:'广东', say:'唔该' },{ region:'四川', say:'多谢咯' },{ region:'上海', say:'谢谢侬' },{ region:'台湾', say:'感温' }],
+    '睡觉': [{ region:'广东', say:'困觉' },{ region:'四川', say:'睡瞌睡' },{ region:'上海', say:'困高' },{ region:'东北', say:'眯瞪' },{ region:'湖南', say:'困告告' }],
+    '去哪里': [{ region:'广东', say:'去边度' },{ region:'四川', say:'走哪里切' },{ region:'上海', say:'到啊里得去' },{ region:'东北', say:'干哈去' },{ region:'陕西', say:'弄啥嘞' }],
+    '今天天气真好': [{ region:'广东', say:'今日天气好鬼靓' },{ region:'四川', say:'今天天气巴适得很' },{ region:'上海', say:'今朝天气老好额' },{ region:'东北', say:'今儿个天儿贼好' }],
+    '欢迎来我家': [{ region:'广东', say:'欢迎黎我屋企' },{ region:'四川', say:'欢迎来我屋头耍' },{ region:'上海', say:'欢迎到阿拉屋里厢' },{ region:'湖南', say:'欢迎到我屋里来咯' }],
+    '新年快乐': [{ region:'广东', say:'新年快罗' },{ region:'四川', say:'新年安逸' },{ region:'上海', say:'新泥夸洛' },{ region:'东北', say:'过年好' }],
+    '多少钱': [{ region:'广东', say:'几多钱' },{ region:'四川', say:'好多钱' },{ region:'上海', say:'几钿' },{ region:'湖南', say:'好子钱咯' }],
+    '好久不见': [{ region:'广东', say:'好耐冇见' },{ region:'四川', say:'好久没看到咯' },{ region:'上海', say:'长远勿见' },{ region:'东北', say:'老久没瞅着了' }],
+  };
+  const entries = dialectMap[word] || [{ region:'各地方言', say:'（该词条尚在收集中，期待你为家乡贡献！）' }];
+  c.innerHTML = `
+    <div class="panel" style="text-align:center;">
+      <h2>📖 方言学堂</h2>
+      <p class="desc" style="margin-bottom:24px;">「<b style="color:var(--gold);font-size:18px;">${word}</b>」<span style="color:var(--text2);"> — ${hint}</span></p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;">
+        ${entries.map(e => `
+          <div style="background:var(--card);border-radius:12px;padding:14px 18px;border:1px solid rgba(155,89,182,0.2);">
+            <span style="color:var(--text2);font-size:12px;">${e.region}</span>
+            <div style="font-size:22px;color:var(--gold);margin:6px 0;font-weight:bold;">${e.say}</div>
+            <span style="font-size:11px;color:var(--text2);">← 方言说法</span>
+          </div>
+        `).join('')}
+      </div>
+      ${entries.length <= 1 ? `<p style="margin-top:16px;color:var(--accent);font-size:13px;">💡 去「单人积分」模式朗读语料，为你的家乡补充这个词条吧！</p>` : ''}
+      <button class="btn btn-secondary" onclick="renderSchool()" style="margin-top:20px;">← 返回学堂</button>
+    </div>
+  `;
+}
+
+// ==================== 每日挑战 ====================
+function generateDailyTasks() {
+  const today = new Date().toISOString().slice(0,10);
+  if (state.dailyDate === today && state.dailyTasks.length) return;
+  state.dailyDate = today;
+  state.dailyDone = {};
+  state.dailyClaimed = {};
+  state.dailyTasks = [
+    { id:1, title:'朗读一条语料', desc:'用家乡话完成一条语料朗读', reward:20, icon:'🎙️', action:'read' },
+    { id:2, title:'校对一条方言', desc:'帮助审核其他用户的方言朗读', reward:15, icon:'✅', action:'review' },
+    { id:3, title:'完成一次猜方言', desc:'在竞技对战模式中完成一轮挑战', reward:30, icon:'⚔️', action:'battle' },
+    { id:4, title:'浏览方言学堂', desc:'在方言学堂中学习3个词条', reward:10, icon:'📖', action:'school' },
+  ];
+}
+
+function renderDaily() {
+  state.screen = 'daily';
+  generateDailyTasks();
+  const c = document.getElementById('centralContent');
+  const doneCount = Object.keys(state.dailyDone).length;
+  const claimedCount = Object.keys(state.dailyClaimed).length;
+
+  c.innerHTML = `
+    <div class="panel" style="text-align:center;">
+      <h2>🏅 每日挑战</h2>
+      <p class="desc">完成今日任务赚取额外积分奖励 | 
+        <span style="color:var(--gold);">已完成 ${doneCount}/${state.dailyTasks.length}</span> |
+        <span style="color:var(--green);">已领取 ${claimedCount}</span>
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${state.dailyTasks.map(t => {
+          const done = state.dailyDone[t.id];
+          const claimed = state.dailyClaimed[t.id];
+          let btnHtml = '';
+          if (claimed) {
+            btnHtml = '<span style="color:var(--green);font-size:13px;">✅ 已领取</span>';
+          } else if (done) {
+            btnHtml = `<button class="btn btn-primary" style="padding:6px 16px;font-size:12px;" onclick="claimDailyReward(${t.id})">🎁 领取 +${t.reward}</button>`;
+          } else {
+            btnHtml = `<button class="btn btn-secondary" style="padding:6px 16px;font-size:12px;" onclick="doDailyTask(${t.id},'${t.action}')">去完成</button>`;
+          }
+          return `
+            <div style="background:var(--card);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.06);justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;text-align:left;">
+                <span style="font-size:28px;">${t.icon}</span>
+                <div>
+                  <div style="font-weight:bold;font-size:14px;">${t.title}</div>
+                  <div style="font-size:12px;color:var(--text2);">${t.desc}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <span style="font-size:12px;color:var(--gold);">+${t.reward}积分</span>
+                ${btnHtml}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      ${doneCount === state.dailyTasks.length && claimedCount === state.dailyTasks.length ? `
+        <p style="margin-top:16px;color:var(--green);font-size:14px;">🎉 今日任务全部完成！明天再来吧~</p>
+      ` : ''}
+    </div>
+  `;
+}
+
+function doDailyTask(taskId, action) {
+  state.dailyDone[taskId] = true;
+  generateDailyTasks(); // refresh
+  if (action === 'read') { switchMode('home'); renderCorpusRead(); }
+  else if (action === 'review') { switchMode('home'); renderCorpusReview(); }
+  else if (action === 'battle') { switchMode('battle'); }
+  else if (action === 'school') { switchMode('school'); }
+  else { renderDaily(); }
+}
+
+function claimDailyReward(taskId) {
+  if (state.dailyClaimed[taskId]) return;
+  const task = state.dailyTasks.find(t => t.id === taskId);
+  if (!task || !state.dailyDone[taskId]) return;
+  state.coins += task.reward;
+  state.xp += task.reward;
+  state.personalContrib += task.reward;
+  state.dailyClaimed[taskId] = true;
+  // 自动升级
+  if (state.xp >= state.level * 100) { state.level++; state.rank = ['方言萌新','方言学徒','方言达人','方言专家','方言大师','方言宗师'][Math.min(5,state.level-1)]; }
+  updateTopBar();
+  showToast(`🎁 领取成功！+${task.reward} 积分`);
+  renderDaily();
+}
+
+// ==================== 初始化 ====================
+initLogin();
+</script>
+</body>
+</html>
